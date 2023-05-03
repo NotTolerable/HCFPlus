@@ -17,6 +17,7 @@ public class Claim implements ConfigurationSerializable {
     private World world;
 
     private HCFPlugin plugin;
+    private Economy economy;
 
     public Claim(Selection s, HCFPlugin plugin){
         this.x = s.pos1().x;
@@ -129,5 +130,48 @@ public class Claim implements ConfigurationSerializable {
         map.put("x2", this.x2);
         map.put("z2", this.z2);
         return map;
+    }
+    public double getClaimCost() {
+        return 10 * this.getBounds().getVolume();
+        }
+
+    public boolean chargeClaimCost(Player player) {
+        if (plugin.getVault() == null) {
+            return true;
+        }
+        Economy econ = plugin.getVault().getEconomy();
+        if (econ == null) {
+            return true;
+        }
+        double cost = getClaimCost();
+        if (econ.getBalance(player) >= cost) {
+            econ.withdrawPlayer(player, cost);
+            return true;
+        }
+        player.sendMessage(ChatColor.RED + "You don't have enough money to claim this land.");
+        return false;
+    }
+
+    public boolean claim(Player player) {
+        if (!chargeClaimCost(player)) {
+            return false;
+        }
+        for (Faction f : plugin.getData().getFactions()) {
+            if (f.hasClaim() && this.overlapsExisting()) {
+                player.sendMessage(ChatColor.RED + "This land overlaps with an existing claim. Please choose a different location.");
+                return false;
+            }
+        }
+        Faction playerFaction = plugin.getData().getPlayerFaction(player.getUniqueId());
+        if (playerFaction == null) {
+            player.sendMessage(ChatColor.RED + "You must be in a clan to claim land.");
+            return false;
+        }
+        plugin.getData().getFactions().remove(playerFaction);
+        playerFaction.setClaim(this);
+        plugin.getData().getFactions().add(playerFaction);
+        plugin.getData().saveFactions();
+        player.sendMessage(ChatColor.GREEN + "You have successfully claimed this land!");
+        return true;
     }
 }
