@@ -56,8 +56,8 @@ public class HCFPlugin extends JavaPlugin implements CommandExecutor {
         this.playerData = new PlayerData();
         this.colorGUI = new ColorGUI();
         this.claimWand = new ClaimWand(this);
-        getCommand("faction").setExecutor(new FCommand(this));
-        getCommand("savefactions").setExecutor(new SaveFactionsCommand(this));
+        getCommand("clans").setExecutor(new FCommand(this));
+        getCommand("saveclans").setExecutor(new SaveFactionsCommand(this));
         saveDefaultConfig();
         getConfig().options().copyDefaults(true);
         saveConfig();
